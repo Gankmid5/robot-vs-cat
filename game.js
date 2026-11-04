@@ -303,6 +303,10 @@ class RobotVsCatGame {
 
         if (!item || item.count <= 0) return;
 
+        if (window.gameAnalytics) {
+            window.gameAnalytics.trackPowerUp(side, type);
+        }
+
         if (type === 'heal') {
             item.count--;
             const char = side === 'robot' ? this.robot : this.cat;
@@ -391,6 +395,10 @@ class RobotVsCatGame {
         const origin = char.getThrowOrigin();
 
         window.soundEngine.playThrow(isRobot);
+
+        if (window.gameAnalytics) {
+            window.gameAnalytics.trackThrow(side, angleDeg, power * 100, this.wind, activeMod);
+        }
 
         const proj = new Projectile({
             x: origin.x,
@@ -634,6 +642,9 @@ class RobotVsCatGame {
 
     onFenceHit(proj) {
         window.soundEngine.playFenceHit();
+        if (window.gameAnalytics) {
+            window.gameAnalytics.trackFenceCollision(this.currentTurn);
+        }
         this.createFenceSparks(proj.x, proj.y);
         this.comicBursts.push(new ComicBurst({
             x: proj.x,
@@ -677,6 +688,10 @@ class RobotVsCatGame {
         target.setState('hit', 0.65);
 
         window.soundEngine.playHit(isRobot, proj.isHeavy);
+
+        if (window.gameAnalytics) {
+            window.gameAnalytics.trackHit(isRobot ? 'robot' : 'cat', damage, proj.isHeavy);
+        }
 
         if (isRobot) {
             this.createRobotSparks(target.x, target.y - 40);
@@ -834,6 +849,10 @@ class RobotVsCatGame {
         }
 
         window.soundEngine.playVictory(robotWon);
+
+        if (window.gameAnalytics) {
+            window.gameAnalytics.trackMatchEnd(robotWon ? 'robot' : 'cat');
+        }
 
         const modal = document.getElementById('gameOverModal');
         const winnerTitle = document.getElementById('winnerTitle');
@@ -1508,6 +1527,9 @@ window.addEventListener('DOMContentLoaded', () => {
         if (titleOverlay) titleOverlay.classList.remove('active');
         window.soundEngine.startMusic();
         window.soundEngine.playBoing();
+        if (window.gameAnalytics) {
+            window.gameAnalytics.trackMatchStart(mode, window.game.aiDifficulty);
+        }
         window.game.restart();
     };
 

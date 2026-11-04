@@ -79,3 +79,11 @@ A faithful, cartoon-packed tribute to the classic **Cat vs Dog** artillery showd
   - `screenshot-1-aiming.png`, `screenshot-2-impact.png`, `screenshot-3-powerups.png`: 1280x720 store screenshots.
 - **Compliant Privacy Policy**: Included as [`privacy-policy.html`](file:///C:/Users/Scratch/.gemini/antigravity/scratch/robot-vs-cat/privacy-policy.html).
 - **Publishing Guide**: Full step-by-step instructions in [`GOOGLE_PLAY_GUIDE.md`](file:///C:/Users/Scratch/.gemini/antigravity/scratch/robot-vs-cat/GOOGLE_PLAY_GUIDE.md).
+
+---
+
+## ⚡ Vercel & Web Analytics Ready
+- **Vercel Web Analytics & Speed Insights**: Pre-configured in `index.html` via official Vercel tags.
+- **Custom Game Telemetry (`analytics.js`)**: Real-time event tracking for match starts, throws, fence blocks, hits, power-ups, and match winners.
+- **Vercel Routing & Headers (`vercel.json`)**: Security headers, static asset caching, and offline SW bypass.
+- **Vercel Guide**: Step-by-step deployment instructions in [`VERCEL.md`](file:///C:/Users/Scratch/.gemini/antigravity/scratch/robot-vs-cat/VERCEL.md).

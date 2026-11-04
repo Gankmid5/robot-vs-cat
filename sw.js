@@ -5,6 +5,7 @@ const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './style.css',
+  './analytics.js',
   './game.js',
   './characters.js',
   './projectiles.js',
@@ -53,6 +54,11 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   // Only handle GET requests
   if (event.request.method !== 'GET') return;
+
+  // Never cache or intercept Vercel Analytics and Speed Insights telemetry pings
+  if (event.request.url.includes('/_vercel/')) {
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
