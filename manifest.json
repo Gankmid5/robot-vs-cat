@@ -1,0 +1,50 @@
+{
+  "name": "Robot vs Cat: Backyard Showdown",
+  "short_name": "Robot vs Cat",
+  "description": "Classic retro artillery showdown! Robot throws bouncing metallic balls, Cat throws juicy chicken drumsticks over the park fence.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0a0f1d",
+  "theme_color": "#0a0f1d",
+  "lang": "en",
+  "categories": ["games", "arcade", "casual"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-1-aiming.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Tactical Aiming and Wind Calculation"
+    },
+    {
+      "src": "screenshot-2-impact.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Comic Impact & Dizzy Star Animations"
+    },
+    {
+      "src": "screenshot-3-powerups.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Dino Drumstick & Bomb Power-Up Cards"
+    }
+  ]
+}

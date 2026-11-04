@@ -1,0 +1,40 @@
+{
+  "packageId": "com.gankmid5.robotvscat",
+  "host": "gankmid5.github.io",
+  "name": "Robot vs Cat: Backyard Showdown",
+  "launcherName": "Robot vs Cat",
+  "themeColor": "#0A0F1D",
+  "themeColorDark": "#0A0F1D",
+  "navigationColor": "#0A0F1D",
+  "navigationColorDark": "#0A0F1D",
+  "navigationDividerColor": "#0A0F1D",
+  "navigationDividerColorDark": "#0A0F1D",
+  "backgroundColor": "#0A0F1D",
+  "enableNotifications": false,
+  "startUrl": "/robot-vs-cat/index.html",
+  "iconUrl": "https://raw.githubusercontent.com/Gankmid5/robot-vs-cat/main/icon-512.png",
+  "maskableIconUrl": "https://raw.githubusercontent.com/Gankmid5/robot-vs-cat/main/icon-512.png",
+  "appVersionCode": 1,
+  "appVersionName": "1.0.0",
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://gankmid5.github.io/robot-vs-cat/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {
+    "locationDelegation": {
+      "enabled": false
+    },
+    "playBilling": {
+      "enabled": false
+    }
+  },
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": false,
+  "isChromeOSOnly": false,
+  "isHideOrientation": false,
+  "orientation": "landscape",
+  "minSdkVersion": 21,
+  "targetSdkVersion": 34
+}

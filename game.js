@@ -1661,4 +1661,36 @@ window.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('click', startMusicOnFirstInteraction);
     window.addEventListener('keydown', startMusicOnFirstInteraction);
     window.addEventListener('touchstart', startMusicOnFirstInteraction);
+
+    // Android Hardware Back Button Handling for Google Play / PWA
+    history.pushState({ page: 'game' }, '');
+    window.addEventListener('popstate', () => {
+        const howToPlayModal = document.getElementById('howToPlayModal');
+        const pauseModal = document.getElementById('pauseMenuModal');
+        const gameOverModal = document.getElementById('gameOverModal');
+        const titleOverlay = document.getElementById('titleOverlay');
+
+        if (howToPlayModal && howToPlayModal.classList.contains('active')) {
+            howToPlayModal.classList.remove('active');
+            history.pushState({ page: 'game' }, '');
+            return;
+        }
+        if (gameOverModal && gameOverModal.classList.contains('active')) {
+            gameOverModal.classList.remove('active');
+            gameOverModal.classList.remove('visible');
+            if (titleOverlay) titleOverlay.classList.add('active');
+            history.pushState({ page: 'game' }, '');
+            return;
+        }
+        if (pauseModal && pauseModal.classList.contains('active')) {
+            pauseModal.classList.remove('active');
+            history.pushState({ page: 'game' }, '');
+            return;
+        }
+        if (titleOverlay && !titleOverlay.classList.contains('active')) {
+            if (pauseModal) pauseModal.classList.add('active');
+            history.pushState({ page: 'game' }, '');
+            return;
+        }
+    });
 });

@@ -66,3 +66,16 @@ A faithful, cartoon-packed tribute to the classic **Cat vs Dog** artillery showd
 - **1P: Player (Cat) vs Robot AI**
 - **2P: Pass & Play (Local)** on the same computer!
 - **AI Difficulty**: Easy, Medium, and Hard with wind trajectory calculation.
+
+---
+
+## 📱 Google Play Store & PWA Ready
+- **PWA Manifest (`manifest.json`)**: Configured for fullscreen landscape standalone display.
+- **Offline Service Worker (`sw.js`)**: 100% cache-first offline support.
+- **Mobile Hardware Back Button**: Traps and toggles in-game pause and modals.
+- **Store Graphics Assets**:
+  - `icon-512.png`: 512x512 32-bit PNG App Icon.
+  - `feature-graphic.png`: 1024x500 Feature Graphic Promotional Banner.
+  - `screenshot-1-aiming.png`, `screenshot-2-impact.png`, `screenshot-3-powerups.png`: 1280x720 store screenshots.
+- **Compliant Privacy Policy**: Included as [`privacy-policy.html`](file:///C:/Users/Scratch/.gemini/antigravity/scratch/robot-vs-cat/privacy-policy.html).
+- **Publishing Guide**: Full step-by-step instructions in [`GOOGLE_PLAY_GUIDE.md`](file:///C:/Users/Scratch/.gemini/antigravity/scratch/robot-vs-cat/GOOGLE_PLAY_GUIDE.md).
