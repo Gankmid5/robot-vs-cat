@@ -1,0 +1,31 @@
+{
+  "name": "robot-vs-cat",
+  "version": "1.0.0",
+  "description": "Classic retro artillery showdown! Robot throws bouncing metallic balls, Cat throws juicy chicken drumsticks over the park fence.",
+  "main": "game.js",
+  "scripts": {
+    "dev": "python3 -m http.server 8000",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gankmid5/robot-vs-cat.git"
+  },
+  "keywords": [
+    "game",
+    "arcade",
+    "html5",
+    "canvas",
+    "pwa",
+    "artillery"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Gankmid5/robot-vs-cat/issues"
+  },
+  "homepage": "https://github.com/Gankmid5/robot-vs-cat#readme",
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
+  }
+}
