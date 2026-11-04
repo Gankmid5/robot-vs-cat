@@ -6,8 +6,7 @@ class SoundEngine {
         this.ctx = null;
         this.muted = false;
         this.musicEnabled = true;
-        this.chargeOsc = null;
-        this.chargeGain = null;
+        this.chargeNodes = null;
 
         // Music Scheduler
         this.isPlayingMusic = false;
@@ -35,7 +34,7 @@ class SoundEngine {
 
     toggleMute() {
         this.muted = !this.muted;
-        if (this.muted && this.chargeOsc) {
+        if (this.muted && this.chargeNodes) {
             this.stopCharge();
         }
         if (this.musicGain && this.ctx) {
@@ -93,7 +92,6 @@ class SoundEngine {
         };
 
         // 4-Bar Chord Progression: C - Am - Dm - G7 (Classic playful cartoon park stroll)
-        // Bassline pattern: "Oom-pah" walking bass
         const bassPattern = [
             // Bar 1: C
             N.C3, null, N.G3, null, N.E3, null, N.G3, null,
@@ -125,7 +123,7 @@ class SoundEngine {
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(bassNote, time);
 
-            gain.gain.setValueAtTime(0.35, time);
+            gain.gain.setValueAtTime(0.32, time);
             gain.gain.exponentialRampToValueAtTime(0.001, time + 0.22);
 
             osc.connect(gain);
@@ -148,7 +146,7 @@ class SoundEngine {
             osc.frequency.setValueAtTime(melNote, time);
             osc2.frequency.setValueAtTime(melNote * 2, time); // 1 octave overtone
 
-            gain.gain.setValueAtTime(0.28, time);
+            gain.gain.setValueAtTime(0.26, time);
             gain.gain.exponentialRampToValueAtTime(0.001, time + 0.18);
 
             osc.connect(gain);
@@ -167,7 +165,7 @@ class SoundEngine {
             const gain = this.ctx.createGain();
             osc.type = 'sine';
             osc.frequency.setValueAtTime(800 + (step % 4 === 1 ? 200 : 0), time);
-            gain.gain.setValueAtTime(0.06, time);
+            gain.gain.setValueAtTime(0.05, time);
             gain.gain.exponentialRampToValueAtTime(0.001, time + 0.04);
 
             osc.connect(gain);
@@ -177,191 +175,420 @@ class SoundEngine {
         }
     }
 
-    // --- CARTOON SOUND EFFECTS ---
+    // =========================================================================
+    // --- AUTHENTIC CHARACTER PROCEDURAL AUDIO ---
+    // =========================================================================
 
-    startCharge() {
+    // --- CHARGING SOUNDS ---
+    startCharge(isRobot = true) {
         if (this.muted) return;
         this.init();
-        if (this.chargeOsc) return;
+        if (this.chargeNodes) return;
 
-        try {
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(140, this.ctx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(620, this.ctx.currentTime + 1.8);
+        const t = this.ctx.currentTime;
 
+        if (isRobot) {
+            // ROBOT CHARGE: High-tech servo motor whine with FM synthesis + digital telemetry chirps!
+            const carrier = this.ctx.createOscillator();
+            const modulator = this.ctx.createOscillator();
+            const modGain = this.ctx.createGain();
             const filter = this.ctx.createBiquadFilter();
+            const mainGain = this.ctx.createGain();
+
+            carrier.type = 'sawtooth';
+            // Carrier pitch rises from 160Hz up to 780Hz as power builds
+            carrier.frequency.setValueAtTime(160, t);
+            carrier.frequency.exponentialRampToValueAtTime(780, t + 2.0);
+
+            // Modulator creates fast mechanical servo motor pulse (75Hz)
+            modulator.type = 'square';
+            modulator.frequency.setValueAtTime(75, t);
+            modulator.frequency.linearRampToValueAtTime(130, t + 2.0);
+            modGain.gain.setValueAtTime(45, t);
+            modGain.gain.linearRampToValueAtTime(120, t + 2.0);
+
+            modulator.connect(modGain);
+            modGain.connect(carrier.frequency);
+
+            // Resonant lowpass filter to mimic charging metal capacitor
             filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(320, this.ctx.currentTime);
-            filter.frequency.exponentialRampToValueAtTime(2200, this.ctx.currentTime + 1.8);
+            filter.frequency.setValueAtTime(400, t);
+            filter.frequency.exponentialRampToValueAtTime(3200, t + 2.0);
+            filter.Q.value = 6;
 
-            gain.gain.setValueAtTime(0.01, this.ctx.currentTime);
-            gain.gain.linearRampToValueAtTime(0.12, this.ctx.currentTime + 0.2);
+            mainGain.gain.setValueAtTime(0.01, t);
+            mainGain.gain.linearRampToValueAtTime(0.18, t + 0.25);
 
-            osc.connect(filter);
-            filter.connect(gain);
-            gain.connect(this.ctx.destination);
+            carrier.connect(filter);
+            filter.connect(mainGain);
+            mainGain.connect(this.ctx.destination);
 
-            osc.start();
-            this.chargeOsc = osc;
-            this.chargeGain = gain;
-        } catch (e) {
-            console.warn("Audio error:", e);
+            carrier.start(t);
+            modulator.start(t);
+
+            this.chargeNodes = {
+                stop: (stopTime) => {
+                    mainGain.gain.linearRampToValueAtTime(0.001, stopTime + 0.06);
+                    carrier.stop(stopTime + 0.07);
+                    modulator.stop(stopTime + 0.07);
+                }
+            };
+        } else {
+            // CAT CHARGE: Deep guttural feline growl & throat rumble ("Grrrr-mrrrooooow")
+            const osc = this.ctx.createOscillator();
+            const lfo = this.ctx.createOscillator();
+            const lfoGain = this.ctx.createGain();
+            const formant = this.ctx.createBiquadFilter();
+            const mainGain = this.ctx.createGain();
+
+            osc.type = 'sawtooth';
+            // Feline throat growl rises from 180Hz up to 340Hz
+            osc.frequency.setValueAtTime(180, t);
+            osc.frequency.linearRampToValueAtTime(340, t + 2.0);
+
+            // Feline throat rumble LFO (28Hz purr-growl tremolo)
+            lfo.type = 'sine';
+            lfo.frequency.setValueAtTime(26, t);
+            lfoGain.gain.setValueAtTime(35, t);
+            lfo.connect(lfoGain);
+            lfoGain.connect(osc.frequency);
+
+            // Cat vocal tract formant filter (F1 resonance around 650Hz)
+            formant.type = 'bandpass';
+            formant.frequency.setValueAtTime(450, t);
+            formant.frequency.linearRampToValueAtTime(850, t + 2.0);
+            formant.Q.value = 3.5;
+
+            mainGain.gain.setValueAtTime(0.01, t);
+            mainGain.gain.linearRampToValueAtTime(0.22, t + 0.25);
+
+            osc.connect(formant);
+            formant.connect(mainGain);
+            mainGain.connect(this.ctx.destination);
+
+            osc.start(t);
+            lfo.start(t);
+
+            this.chargeNodes = {
+                stop: (stopTime) => {
+                    mainGain.gain.linearRampToValueAtTime(0.001, stopTime + 0.06);
+                    osc.stop(stopTime + 0.07);
+                    lfo.stop(stopTime + 0.07);
+                }
+            };
         }
     }
 
     stopCharge() {
-        if (this.chargeOsc) {
+        if (this.chargeNodes) {
             try {
-                this.chargeGain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
-                this.chargeOsc.stop(this.ctx.currentTime + 0.06);
+                this.chargeNodes.stop(this.ctx.currentTime);
             } catch (e) {}
-            this.chargeOsc = null;
-            this.chargeGain = null;
+            this.chargeNodes = null;
         }
     }
 
-    playBoing() {
-        // Comic spring boing
-        if (this.muted) return;
-        this.init();
-        const t = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(220, t);
-        osc.frequency.linearRampToValueAtTime(540, t + 0.15);
-        osc.frequency.linearRampToValueAtTime(360, t + 0.28);
-
-        gain.gain.setValueAtTime(0.2, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(t);
-        osc.stop(t + 0.3);
-    }
-
+    // --- THROW SOUNDS ---
     playThrow(isRobot = true) {
         if (this.muted) return;
         this.init();
         this.stopCharge();
 
         const t = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
 
         if (isRobot) {
-            // High-tech cartoon laser whip
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(750, t);
-            osc.frequency.exponentialRampToValueAtTime(120, t + 0.28);
-            gain.gain.setValueAtTime(0.25, t);
-            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
-        } else {
-            // Comical slide whip whoosh
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(520, t);
-            osc.frequency.exponentialRampToValueAtTime(95, t + 0.25);
-            gain.gain.setValueAtTime(0.3, t);
-            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
-        }
+            // ROBOT THROW: Pneumatic hydraulic piston release + high-voltage laser railgun discharge ("PSH-ZAAAAP!")
+            // 1. High frequency laser chirp
+            const laser = this.ctx.createOscillator();
+            const laserGain = this.ctx.createGain();
+            laser.type = 'sawtooth';
+            laser.frequency.setValueAtTime(1600, t);
+            laser.frequency.exponentialRampToValueAtTime(180, t + 0.22);
 
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(t);
-        osc.stop(t + 0.28);
+            laserGain.gain.setValueAtTime(0.28, t);
+            laserGain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+            laser.connect(laserGain);
+            laserGain.connect(this.ctx.destination);
+
+            laser.start(t);
+            laser.stop(t + 0.22);
+
+            // 2. Pneumatic hydraulic air blast noise
+            const bufferSize = this.ctx.sampleRate * 0.16;
+            const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+            const noise = this.ctx.createBufferSource();
+            noise.buffer = buffer;
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(1800, t);
+            filter.frequency.exponentialRampToValueAtTime(400, t + 0.16);
+            filter.Q.value = 2.0;
+
+            const noiseGain = this.ctx.createGain();
+            noiseGain.gain.setValueAtTime(0.24, t);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+
+            noise.connect(filter);
+            filter.connect(noiseGain);
+            noiseGain.connect(this.ctx.destination);
+
+            noise.start(t);
+        } else {
+            // CAT THROW: Playful feline pounce chirp & sharp vocal whip ("MRR-OW-PH!")
+            const osc = this.ctx.createOscillator();
+            const formant = this.ctx.createBiquadFilter();
+            const gain = this.ctx.createGain();
+
+            osc.type = 'sawtooth';
+            // Vocal inflection: starts at 480Hz, chirps up to 720Hz, drops sharply to 260Hz
+            osc.frequency.setValueAtTime(480, t);
+            osc.frequency.exponentialRampToValueAtTime(760, t + 0.08);
+            osc.frequency.exponentialRampToValueAtTime(260, t + 0.24);
+
+            // Formant filter creates feline vocal resonance
+            formant.type = 'bandpass';
+            formant.frequency.setValueAtTime(1200, t);
+            formant.frequency.exponentialRampToValueAtTime(800, t + 0.24);
+            formant.Q.value = 4.0;
+
+            gain.gain.setValueAtTime(0.32, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.24);
+
+            osc.connect(formant);
+            formant.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(t);
+            osc.stop(t + 0.24);
+        }
     }
 
+    // --- HIT & IMPACT SOUNDS ---
     playHit(isRobotTarget = true, isHeavy = false) {
         if (this.muted) return;
         this.init();
         const t = this.ctx.currentTime;
 
         if (isRobotTarget) {
-            // Cartoon CLANG & electric comic buzzer
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(isHeavy ? 160 : 280, t);
-            osc.frequency.exponentialRampToValueAtTime(60, t + 0.35);
+            // ROBOT HIT: Metallic Ring Modulation (Chassis Clang) + Electrical Short-Circuit Crackle ("CLANG-ZAP-BZZT!")
+            // 1. Inharmonic metallic ring modulation (Bell/Iron chassis clang)
+            const carrier = this.ctx.createOscillator();
+            const mod = this.ctx.createOscillator();
+            const modGain = this.ctx.createGain();
+            const clangGain = this.ctx.createGain();
 
-            // Metal crash noise
-            const bufferSize = this.ctx.sampleRate * 0.2;
+            carrier.type = 'sine';
+            carrier.frequency.setValueAtTime(isHeavy ? 180 : 310, t);
+            carrier.frequency.exponentialRampToValueAtTime(90, t + 0.35);
+
+            mod.type = 'triangle';
+            mod.frequency.setValueAtTime(isHeavy ? 265 : 437, t); // inharmonic ratio for metallic clank!
+
+            modGain.gain.setValueAtTime(140, t);
+            modGain.gain.exponentialRampToValueAtTime(1, t + 0.35);
+
+            mod.connect(modGain);
+            modGain.connect(carrier.frequency);
+
+            clangGain.gain.setValueAtTime(0.38, t);
+            clangGain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+
+            carrier.connect(clangGain);
+            clangGain.connect(this.ctx.destination);
+
+            carrier.start(t);
+            mod.start(t);
+            carrier.stop(t + 0.35);
+            mod.stop(t + 0.35);
+
+            // 2. Electrical Short-Circuit Buzz / Malfunction Zap
+            const zap = this.ctx.createOscillator();
+            const zapGain = this.ctx.createGain();
+            zap.type = 'sawtooth';
+            zap.frequency.setValueAtTime(750, t + 0.05);
+            zap.frequency.exponentialRampToValueAtTime(120, t + 0.28);
+
+            zapGain.gain.setValueAtTime(0.25, t + 0.05);
+            zapGain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+            zap.connect(zapGain);
+            zapGain.connect(this.ctx.destination);
+
+            zap.start(t + 0.05);
+            zap.stop(t + 0.28);
+        } else {
+            // CAT HIT: Authentic Distressed Cat Yowl & Screech ("MEEE-EE-OWWW-KHSSSH!")
+            // 1. Vocal tract formant meow-screech with feline vibrato
+            const voice = this.ctx.createOscillator();
+            const vibrato = this.ctx.createOscillator();
+            const vibGain = this.ctx.createGain();
+            const formantF1 = this.ctx.createBiquadFilter();
+            const formantF2 = this.ctx.createBiquadFilter();
+            const catGain = this.ctx.createGain();
+
+            voice.type = 'sawtooth';
+            // Classic cat vocal screech curve: starts high at 920Hz, drops to 540Hz, then distressed yowl up to 720Hz
+            voice.frequency.setValueAtTime(920, t);
+            voice.frequency.exponentialRampToValueAtTime(520, t + 0.22);
+            voice.frequency.linearRampToValueAtTime(680, t + 0.42);
+            voice.frequency.exponentialRampToValueAtTime(320, t + 0.55);
+
+            // 7.5 Hz vocal cord vibrato
+            vibrato.frequency.setValueAtTime(7.5, t);
+            vibGain.gain.setValueAtTime(35, t);
+            vibrato.connect(vibGain);
+            vibGain.connect(voice.frequency);
+
+            // Formant filters shaping the voice into "MEEE-OW" vowel
+            formantF1.type = 'bandpass';
+            formantF1.frequency.setValueAtTime(800, t);
+            formantF1.Q.value = 4.0;
+
+            formantF2.type = 'bandpass';
+            formantF2.frequency.setValueAtTime(1850, t);
+            formantF2.Q.value = 5.0;
+
+            catGain.gain.setValueAtTime(0.35, t);
+            catGain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+
+            voice.connect(formantF1);
+            voice.connect(formantF2);
+            formantF1.connect(catGain);
+            formantF2.connect(catGain);
+            catGain.connect(this.ctx.destination);
+
+            vibrato.start(t);
+            voice.start(t);
+            vibrato.stop(t + 0.55);
+            voice.stop(t + 0.55);
+
+            // 2. Startled Feline Hiss & Spit ("KHSSSH!")
+            const bufferSize = this.ctx.sampleRate * 0.25;
             const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
             const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) {
-                data[i] = Math.random() * 2 - 1;
-            }
-            const noise = this.ctx.createBufferSource();
-            noise.buffer = buffer;
-            const noiseGain = this.ctx.createGain();
-            noiseGain.gain.setValueAtTime(0.3, t);
-            noiseGain.gain.exponentialRampToValueAtTime(0.01, t + 0.18);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
 
-            gain.gain.setValueAtTime(0.35, t);
-            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+            const hissNoise = this.ctx.createBufferSource();
+            hissNoise.buffer = buffer;
 
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            noise.connect(noiseGain);
-            noiseGain.connect(this.ctx.destination);
+            const hissFilter = this.ctx.createBiquadFilter();
+            hissFilter.type = 'highpass';
+            hissFilter.frequency.setValueAtTime(3800, t + 0.08); // sharp feline hiss
 
-            osc.start(t);
-            osc.stop(t + 0.35);
-            noise.start(t);
-        } else {
-            // Exaggerated comic cat screech: Mee-YOOOWWW!
-            const osc = this.ctx.createOscillator();
-            const oscMod = this.ctx.createOscillator();
-            const modGain = this.ctx.createGain();
-            const gain = this.ctx.createGain();
+            const hissGain = this.ctx.createGain();
+            hissGain.gain.setValueAtTime(0.24, t + 0.08);
+            hissGain.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
 
-            osc.type = 'sawtooth';
-            // Start high, drop sharply, wobble
-            osc.frequency.setValueAtTime(880, t);
-            osc.frequency.exponentialRampToValueAtTime(320, t + 0.25);
-            osc.frequency.exponentialRampToValueAtTime(520, t + 0.45);
+            hissNoise.connect(hissFilter);
+            hissFilter.connect(hissGain);
+            hissGain.connect(this.ctx.destination);
 
-            // Vibrato for comedic distressed effect
-            oscMod.frequency.setValueAtTime(14, t);
-            modGain.gain.setValueAtTime(35, t);
-            oscMod.connect(osc.frequency);
-
-            gain.gain.setValueAtTime(0.24, t);
-            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.48);
-
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-
-            oscMod.start(t);
-            osc.start(t);
-            osc.stop(t + 0.48);
-            oscMod.stop(t + 0.48);
+            hissNoise.start(t + 0.08);
         }
     }
 
+    // --- REPAIR & HEAL SOUNDS ---
+    playHeal(isRobot = true) {
+        if (this.muted) return;
+        this.init();
+        const t = this.ctx.currentTime;
+
+        if (isRobot) {
+            // ROBOT RECHARGE: High-tech digital telemetry chime & power cell bootup ("Bip-bip-beep-BOOP!")
+            const notes = [440, 660, 880, 1320]; // ascending harmonic digital notes
+            notes.forEach((freq, idx) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                const noteStart = t + idx * 0.07;
+
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(freq, noteStart);
+
+                gain.gain.setValueAtTime(0.18, noteStart);
+                gain.gain.exponentialRampToValueAtTime(0.001, noteStart + 0.12);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(noteStart);
+                osc.stop(noteStart + 0.12);
+            });
+        } else {
+            // CAT TUNA FEAST: Warm, happy feline purring (26Hz flutter) + content "Mrrr-meow!"
+            // 1. Deep purr
+            const purr = this.ctx.createOscillator();
+            const purrLfo = this.ctx.createOscillator();
+            const purrGain = this.ctx.createGain();
+            const purrMainGain = this.ctx.createGain();
+
+            purr.type = 'triangle';
+            purr.frequency.setValueAtTime(95, t);
+
+            purrLfo.type = 'sine';
+            purrLfo.frequency.setValueAtTime(25, t); // 25Hz purr flutter
+            purrGain.gain.setValueAtTime(30, t);
+            purrLfo.connect(purrGain);
+            purrGain.connect(purr.frequency);
+
+            purrMainGain.gain.setValueAtTime(0.25, t);
+            purrMainGain.gain.linearRampToValueAtTime(0.001, t + 0.45);
+
+            purr.connect(purrMainGain);
+            purrMainGain.connect(this.ctx.destination);
+
+            purr.start(t);
+            purrLfo.start(t);
+            purr.stop(t + 0.45);
+            purrLfo.stop(t + 0.45);
+
+            // 2. Sweet happy meow ("Mrr-meow!")
+            const meow = this.ctx.createOscillator();
+            const meowFormant = this.ctx.createBiquadFilter();
+            const meowGain = this.ctx.createGain();
+
+            meow.type = 'sawtooth';
+            meow.frequency.setValueAtTime(420, t + 0.18);
+            meow.frequency.linearRampToValueAtTime(680, t + 0.32);
+            meow.frequency.exponentialRampToValueAtTime(400, t + 0.52);
+
+            meowFormant.type = 'bandpass';
+            meowFormant.frequency.setValueAtTime(1100, t + 0.18);
+            meowFormant.Q.value = 4.0;
+
+            meowGain.gain.setValueAtTime(0.22, t + 0.18);
+            meowGain.gain.exponentialRampToValueAtTime(0.001, t + 0.52);
+
+            meow.connect(meowFormant);
+            meowFormant.connect(meowGain);
+            meowGain.connect(this.ctx.destination);
+
+            meow.start(t + 0.18);
+            meow.stop(t + 0.52);
+        }
+    }
+
+    // --- FENCE & GROUND THUDS ---
     playFenceHit() {
         if (this.muted) return;
         this.init();
         const t = this.ctx.currentTime;
 
-        // Comical "BONK" hollow wood thud
+        // Comical "BONK" hollow wood picket clatter
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(320, t);
-        osc.frequency.exponentialRampToValueAtTime(80, t + 0.18);
+        osc.frequency.setValueAtTime(340, t);
+        osc.frequency.exponentialRampToValueAtTime(75, t + 0.2);
 
-        gain.gain.setValueAtTime(0.3, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+        gain.gain.setValueAtTime(0.32, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
 
         osc.connect(gain);
         gain.connect(this.ctx.destination);
         osc.start(t);
-        osc.stop(t + 0.18);
+        osc.stop(t + 0.2);
     }
 
     playGroundHit() {
@@ -369,14 +596,14 @@ class SoundEngine {
         this.init();
         const t = this.ctx.currentTime;
 
-        // Comical "SPLAT" / dirt flop
+        // Soft comic "SPLAT" / turf thud
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(150, t);
-        osc.frequency.exponentialRampToValueAtTime(45, t + 0.18);
+        osc.frequency.setValueAtTime(160, t);
+        osc.frequency.exponentialRampToValueAtTime(42, t + 0.18);
 
-        gain.gain.setValueAtTime(0.25, t);
+        gain.gain.setValueAtTime(0.26, t);
         gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
 
         osc.connect(gain);
@@ -389,7 +616,7 @@ class SoundEngine {
         if (this.muted) return;
         this.init();
         const t = this.ctx.currentTime;
-        const notes = [392, 523.25, 659.25, 783.99, 1046.50]; // G4, C5, E5, G5, C6 (sparkling arpeggio)
+        const notes = [392, 523.25, 659.25, 783.99, 1046.50]; // G4, C5, E5, G5, C6 (sparkling arcade arpeggio)
 
         notes.forEach((freq, idx) => {
             const osc = this.ctx.createOscillator();
@@ -408,57 +635,114 @@ class SoundEngine {
         });
     }
 
-    playHeal() {
+    playBoing() {
+        // Comic spring button boing
         if (this.muted) return;
         this.init();
         const t = this.ctx.currentTime;
-        const notes = [329.63, 392.00, 523.25, 659.25]; // E G C E
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
 
-        notes.forEach((freq, idx) => {
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            const noteStart = t + idx * 0.07;
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(240, t);
+        osc.frequency.linearRampToValueAtTime(580, t + 0.14);
+        osc.frequency.linearRampToValueAtTime(380, t + 0.28);
 
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(freq, noteStart);
-            gain.gain.setValueAtTime(0.2, noteStart);
-            gain.gain.exponentialRampToValueAtTime(0.001, noteStart + 0.22);
+        gain.gain.setValueAtTime(0.18, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
 
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start(noteStart);
-            osc.stop(noteStart + 0.22);
-        });
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.3);
     }
 
-    playVictory() {
+    // --- VICTORY FANFARES ---
+    playVictory(isRobotWon = true) {
         if (this.muted) return;
         this.init();
         const t = this.ctx.currentTime;
-        const fanfare = [
-            { f: 392, d: 0.14, w: 0 },
-            { f: 523.25, d: 0.14, w: 0.14 },
-            { f: 659.25, d: 0.14, w: 0.28 },
-            { f: 783.99, d: 0.35, w: 0.42 },
-            { f: 659.25, d: 0.12, w: 0.8 },
-            { f: 783.99, d: 0.55, w: 0.95 }
-        ];
 
-        fanfare.forEach(note => {
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            const noteStart = t + note.w;
+        if (isRobotWon) {
+            // ROBOT VICTORY: 8-Bit chiptune robotic victory fanfare with cheerful square-wave chirps!
+            const melody = [
+                { f: 523.25, d: 0.12, w: 0 },
+                { f: 659.25, d: 0.12, w: 0.12 },
+                { f: 783.99, d: 0.12, w: 0.24 },
+                { f: 1046.50, d: 0.35, w: 0.36 },
+                { f: 783.99, d: 0.12, w: 0.72 },
+                { f: 1046.50, d: 0.55, w: 0.86 }
+            ];
 
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(note.f, noteStart);
-            gain.gain.setValueAtTime(0.24, noteStart);
-            gain.gain.exponentialRampToValueAtTime(0.001, noteStart + note.d);
+            melody.forEach(note => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                const noteStart = t + note.w;
 
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start(noteStart);
-            osc.stop(noteStart + note.d);
-        });
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(note.f, noteStart);
+                gain.gain.setValueAtTime(0.22, noteStart);
+                gain.gain.exponentialRampToValueAtTime(0.001, noteStart + note.d);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(noteStart);
+                osc.stop(noteStart + note.d);
+            });
+        } else {
+            // CAT VICTORY: Cheerful cartoon ragtime fanfare ending with a smug, happy feline "Meooww!"
+            const melody = [
+                { f: 392, d: 0.14, w: 0 },
+                { f: 523.25, d: 0.14, w: 0.14 },
+                { f: 659.25, d: 0.14, w: 0.28 },
+                { f: 783.99, d: 0.45, w: 0.42 }
+            ];
+
+            melody.forEach(note => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                const noteStart = t + note.w;
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(note.f, noteStart);
+                gain.gain.setValueAtTime(0.24, noteStart);
+                gain.gain.exponentialRampToValueAtTime(0.001, noteStart + note.d);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(noteStart);
+                osc.stop(noteStart + note.d);
+            });
+
+            // Triumphant finishing meow!
+            setTimeout(() => {
+                if (!this.muted && this.ctx) {
+                    const mt = this.ctx.currentTime;
+                    const meow = this.ctx.createOscillator();
+                    const meowFormant = this.ctx.createBiquadFilter();
+                    const meowGain = this.ctx.createGain();
+
+                    meow.type = 'sawtooth';
+                    meow.frequency.setValueAtTime(450, mt);
+                    meow.frequency.linearRampToValueAtTime(750, mt + 0.18);
+                    meow.frequency.exponentialRampToValueAtTime(420, mt + 0.45);
+
+                    meowFormant.type = 'bandpass';
+                    meowFormant.frequency.setValueAtTime(1150, mt);
+                    meowFormant.Q.value = 4.0;
+
+                    meowGain.gain.setValueAtTime(0.28, mt);
+                    meowGain.gain.exponentialRampToValueAtTime(0.001, mt + 0.45);
+
+                    meow.connect(meowFormant);
+                    meowFormant.connect(meowGain);
+                    meowGain.connect(this.ctx.destination);
+
+                    meow.start(mt);
+                    meow.stop(mt + 0.45);
+                }
+            }, 900);
+        }
     }
 }
 

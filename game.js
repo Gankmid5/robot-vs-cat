@@ -307,7 +307,7 @@ class RobotVsCatGame {
             item.count--;
             const char = side === 'robot' ? this.robot : this.cat;
             char.setHp(char.hp + 30);
-            window.soundEngine.playHeal();
+            window.soundEngine.playHeal(side === 'robot');
             this.floatingTexts.push(new FloatingText({
                 x: char.x,
                 y: char.y - 70,
@@ -339,11 +339,12 @@ class RobotVsCatGame {
         this.charge = 0;
         this.chargeDir = 1;
         this.turnState = 'charging';
-        const char = this.currentTurn === 'robot' ? this.robot : this.cat;
+        const isRobot = this.currentTurn === 'robot';
+        const char = isRobot ? this.robot : this.cat;
         char.setState('charging');
         window.soundEngine.startMusic();
         window.soundEngine.playBoing();
-        window.soundEngine.startCharge();
+        window.soundEngine.startCharge(isRobot);
     }
 
     releaseCharge() {
@@ -832,7 +833,7 @@ class RobotVsCatGame {
             this.robot.setState('defeat');
         }
 
-        window.soundEngine.playVictory();
+        window.soundEngine.playVictory(robotWon);
 
         const modal = document.getElementById('gameOverModal');
         const winnerTitle = document.getElementById('winnerTitle');
