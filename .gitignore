@@ -1,0 +1,7 @@
+# itch.io package archive
+robot-vs-cat-itch-io.zip
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+*.tmp
