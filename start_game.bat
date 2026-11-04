@@ -1,0 +1,3 @@
+@echo off
+echo Starting Robot vs Cat game...
+start "" "%~dp0index.html"

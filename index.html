@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Robot vs Cat - The Ultimate Ball & Bone Showdown</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="gameViewport" class="game-viewport">
+    <!-- Main Game Canvas -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- TOP ARCADE HUD -->
+    <div id="gameHud" class="arcade-hud">
+        <!-- Robo-X Player Status -->
+        <div class="hud-player robot-player">
+            <div class="player-avatar robot-avatar" title="Robo-X">
+                <span class="avatar-icon">🤖</span>
+            </div>
+            <div class="player-metrics">
+                <div class="player-header">
+                    <span class="player-name">ROBO-X</span>
+                    <span id="robotHpText" class="player-hp-num">100 HP</span>
+                </div>
+                <div class="hp-bar-track">
+                    <div id="robotHpBar" class="hp-bar-fill robot-hp-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center Weather Vane & Turn Indicator -->
+        <div class="hud-center">
+            <!-- Cartoon Weather Vane -->
+            <div id="windVane" class="wind-vane" title="Wind pushes projectiles across the park">
+                <div class="wind-cloud-icon">☁️</div>
+                <div class="wind-info">
+                    <span id="windArrowIcon" class="wind-arrow-icon">➔</span>
+                    <span id="windTextLabel" class="wind-text-label">GENTLE BREEZE</span>
+                </div>
+            </div>
+            <!-- Dynamic Turn Badge -->
+            <div id="turnBadge" class="turn-pill robot-turn">🤖 ROBO-X'S TURN</div>
+        </div>
+
+        <!-- Felix Cat Player Status -->
+        <div class="hud-player cat-player">
+            <div class="player-metrics">
+                <div class="player-header">
+                    <span id="catHpText" class="player-hp-num">100 HP</span>
+                    <span class="player-name">FELIX CAT</span>
+                </div>
+                <div class="hp-bar-track">
+                    <div id="catHpBar" class="hp-bar-fill cat-hp-fill"></div>
+                </div>
+            </div>
+            <div class="player-avatar cat-avatar" title="Felix the Cat">
+                <span class="avatar-icon">🐱</span>
+            </div>
+        </div>
+
+        <!-- Top Right Mini Arcade Utilities -->
+        <div class="hud-quick-tools">
+            <button id="quickPauseBtn" class="arcade-icon-btn" title="Pause / Menu">⏸</button>
+            <button id="quickMusicBtn" class="arcade-icon-btn" title="Toggle Music">🎵</button>
+            <button id="quickMuteBtn" class="arcade-icon-btn" title="Toggle Sound FX">🔊</button>
+            <button id="fullscreenBtn" class="arcade-icon-btn" title="Toggle Fullscreen">⛶</button>
+        </div>
+    </div>
+
+    <!-- BOTTOM ARCADE ACTION TRAY -->
+    <div id="actionTray" class="arcade-action-tray">
+        <!-- 4 Collectible Power-Up Cards -->
+        <div class="powerup-cards-dock">
+            <button id="pwr_double" class="power-card" title="Double Shot: Launch 2 projectiles in sequence!">
+                <div class="card-icon">⚡</div>
+                <div class="card-info">
+                    <span class="card-name">DOUBLE</span>
+                    <span id="count_double" class="card-badge">x1</span>
+                </div>
+            </button>
+            <button id="pwr_mega" class="power-card" title="Mega Blast: Giant heavy projectile dealing massive damage!">
+                <div class="card-icon">💣</div>
+                <div class="card-info">
+                    <span class="card-name">MEGA</span>
+                    <span id="count_mega" class="card-badge">x1</span>
+                </div>
+            </button>
+            <button id="pwr_heal" class="power-card" title="Quick Repair: Restore +30 HP immediately!">
+                <div class="card-icon">🔋</div>
+                <div class="card-info">
+                    <span class="card-name">REPAIR</span>
+                    <span id="count_heal" class="card-badge">x1</span>
+                </div>
+            </button>
+            <button id="pwr_windNegator" class="power-card" title="Aero Boost: High-speed projectile that completely ignores wind!">
+                <div class="card-icon">🚀</div>
+                <div class="card-info">
+                    <span class="card-name">AERO</span>
+                    <span id="count_windNegator" class="card-badge">x1</span>
+                </div>
+            </button>
+        </div>
+
+        <!-- Aim & Throw Action Center -->
+        <div class="throw-action-center">
+            <!-- Tactical Arcade Angle Stepper -->
+            <div class="arcade-angle-stepper">
+                <span class="stepper-label">AIM ANGLE</span>
+                <div class="stepper-controls">
+                    <button id="angleDownBtn" class="stepper-btn" title="Lower angle (Down arrow)">◀</button>
+                    <span id="angleValue" class="angle-display">55°</span>
+                    <button id="angleUpBtn" class="stepper-btn" title="Raise angle (Up arrow)">▶</button>
+                </div>
+                <input type="range" id="angleInput" min="30" max="80" value="55" step="1" class="hidden-angle-range">
+            </div>
+
+            <!-- Massive Arcade Throw Button with Integrated Power Meter -->
+            <div class="throw-button-wrapper">
+                <div class="power-meter-container">
+                    <div id="powerBarFill" class="power-liquid-fill"></div>
+                    <span id="powerText" class="power-liquid-text">HOLD TO CHARGE</span>
+                </div>
+                <button id="throwBtn" class="arcade-throw-btn">
+                    <span class="btn-shine"></span>
+                    <span class="btn-label">HOLD TO THROW</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TITLE / MAIN MENU SCREEN OVERLAY -->
+    <div id="titleScreenOverlay" class="screen-modal active">
+        <div class="menu-modal-card">
+            <!-- 3D Arcade Title Logo -->
+            <div class="title-logo-container">
+                <h1 class="game-main-title">
+                    <span class="title-robot">ROBOT</span>
+                    <span class="title-vs">VS</span>
+                    <span class="title-cat">CAT</span>
+                </h1>
+                <p class="game-tagline">The Ultimate Ball &amp; Bone Backyard Showdown!</p>
+            </div>
+
+            <!-- Mode Selection Cards -->
+            <div class="menu-mode-options">
+                <button id="btnMode1PRobot" class="menu-action-btn primary-btn">
+                    <span class="btn-icon">🤖</span>
+                    <div class="btn-text">
+                        <span class="btn-main-text">1 PLAYER (PLAY AS ROBOT)</span>
+                        <span class="btn-sub-text">Throw energy balls vs Felix the Cat AI</span>
+                    </div>
+                </button>
+
+                <button id="btnMode1PCat" class="menu-action-btn secondary-btn">
+                    <span class="btn-icon">🐱</span>
+                    <div class="btn-text">
+                        <span class="btn-main-text">1 PLAYER (PLAY AS CAT)</span>
+                        <span class="btn-sub-text">Fling chicken bones vs Robo-X AI</span>
+                    </div>
+                </button>
+
+                <button id="btnMode2P" class="menu-action-btn tertiary-btn">
+                    <span class="btn-icon">👥</span>
+                    <div class="btn-text">
+                        <span class="btn-main-text">2 PLAYERS (PASS &amp; PLAY)</span>
+                        <span class="btn-sub-text">Challenge a friend on the same screen!</span>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Settings & Difficulty Dock -->
+            <div class="menu-settings-dock">
+                <div class="setting-item">
+                    <span class="setting-title">AI DIFFICULTY:</span>
+                    <button id="difficultyToggleBtn" class="setting-pill-btn">⭐⭐ MEDIUM</button>
+                </div>
+                <div class="setting-item">
+                    <button id="howToPlayBtn" class="help-pill-btn">❓ HOW TO PLAY</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HOW TO PLAY MODAL -->
+    <div id="howToPlayModal" class="screen-modal">
+        <div class="guide-modal-card">
+            <h2 class="modal-heading">🎮 HOW TO PLAY</h2>
+            <div class="guide-steps">
+                <div class="guide-step">
+                    <div class="step-badge">1</div>
+                    <div class="step-desc">
+                        <strong>Aim Your Shot:</strong> Drag directly on screen, or use the <strong>[◀] [▶]</strong> angle buttons or <strong>[W] / [S]</strong> arrow keys.
+                    </div>
+                </div>
+                <div class="guide-step">
+                    <div class="step-badge">2</div>
+                    <div class="step-desc">
+                        <strong>Charge &amp; Launch:</strong> Press and hold the big green <strong>HOLD TO THROW</strong> button, click your character, or hold <strong>[Spacebar]</strong>. Release when the meter hits your target power!
+                    </div>
+                </div>
+                <div class="guide-step">
+                    <div class="step-badge">3</div>
+                    <div class="step-desc">
+                        <strong>Watch The Wind:</strong> The Weather Vane at the top indicates wind direction and gust strength. Compensate your aim so the wind doesn't blow your shot into the fence!
+                    </div>
+                </div>
+                <div class="guide-step">
+                    <div class="step-badge">4</div>
+                    <div class="step-desc">
+                        <strong>Use Power-Ups:</strong> Activate <strong>Double Shot</strong>, <strong>Mega Bomb</strong>, <strong>Quick Repair</strong>, or wind-piercing <strong>Aero Boost</strong>!
+                    </div>
+                </div>
+            </div>
+            <button id="closeHowToPlayBtn" class="arcade-confirm-btn">GOT IT! LET'S PLAY</button>
+        </div>
+    </div>
+
+    <!-- PAUSE / IN-GAME MENU MODAL -->
+    <div id="pauseMenuModal" class="screen-modal">
+        <div class="menu-modal-card pause-card">
+            <h2 class="modal-heading">⏸ GAME PAUSED</h2>
+            <div class="pause-actions">
+                <button id="resumeGameBtn" class="menu-action-btn primary-btn">▶ RESUME GAME</button>
+                <button id="restartMatchBtn" class="menu-action-btn secondary-btn">🔄 RESTART MATCH</button>
+                <button id="pauseHowToPlayBtn" class="menu-action-btn">❓ HOW TO PLAY</button>
+                <button id="returnToTitleBtn" class="menu-action-btn danger-btn">🏠 MAIN MENU</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME OVER / VICTORY MODAL -->
+    <div id="gameOverModal" class="screen-modal">
+        <div class="menu-modal-card victory-card">
+            <div id="winnerCrown" class="winner-crown">🏆</div>
+            <h2 id="winnerTitle" class="modal-heading winner-title">ROBO-X WINS!</h2>
+            <p id="winnerMsg" class="winner-message">Mechanical supremacy achieved! The metal ball reigns supreme.</p>
+            <div class="victory-actions">
+                <button id="modalRestartBtn" class="arcade-confirm-btn">PLAY AGAIN 🎮</button>
+                <button id="modalMainMenuBtn" class="arcade-secondary-btn">MAIN MENU 🏠</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Game Scripts -->
+<script src="audio.js"></script>
+<script src="characters.js"></script>
+<script src="projectiles.js"></script>
+<script src="game.js"></script>
+
+</body>
+</html>
