@@ -5,3 +5,6 @@ robot-vs-cat-itch-io.zip
 .DS_Store
 Thumbs.db
 *.tmp
+
+# Node modules
+node_modules/
